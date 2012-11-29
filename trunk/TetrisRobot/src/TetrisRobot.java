@@ -15,37 +15,25 @@ public class TetrisRobot //implements KeyListener
 	public static void main(String[] args) throws AWTException{
 		startTime = System.currentTimeMillis();
 		field = new  boolean[20][10];
-		//field[0][3] = true;
-		//field[1][3] = true;
-		//Piece q = new Piece();
-		//field = q.iterate(field);
+//		field[0][3] = true;
+//		field[1][3] = true;
+//		Piece q = new Piece();
+//		field = q.iterate(field, 0);
 		int top = 0;
 		boolean emergent = false;
 		Robot r = new Robot();
 		r.setAutoWaitForIdle(false);
 		delay(5000);
+		Piece p = new Piece();
+		Piece q = new Piece();
+		q.findSelf(r);
 		while(System.currentTimeMillis()-startTime < 10000){// && cont
-			Piece p = new Piece();
 			System.out.println("start cycle");
-			p.findSelf(r, top);
-			//Determine optimal move
-			/*int[][] moves = new int[4][4];
-			for(int i = 0; i < 4; i++){
-				p.findSelf(r, top, 0);
-				//System.out.println("found " + i);
-				moves[i] = p.detOptimal(field, emergent);
-				keyType(r, KeyEvent.VK_UP);
-				//System.out.println("check " + i);
-			}*/
+			//p.findSelf(r);
+			p = q;
+			q.getNextPiece(r);
 			
-			int[] optimal = p.detOptimal(field, emergent);//moves[0];
-			//int rot = 0;
-			/*for(int i = 1; i < 4; i++){
-				if(smaller(optimal, moves[i], emergent)){
-					optimal = moves[i];
-					rot = i;
-				}
-			}*/
+			int[] optimal = p.detOptimal(field, emergent);
 			System.out.println("make move");
 			//Make move
 			for(int i = 0; i < optimal[0]; i++){
@@ -63,7 +51,7 @@ public class TetrisRobot //implements KeyListener
 			System.out.println("move made");
 			delay(100);
 			//Reset data
-			field = p.iterate(field);
+			field = p.iterate(field, optimal[1]);
 			p.clearLines(field);
 			top = 0;
 			while(true){

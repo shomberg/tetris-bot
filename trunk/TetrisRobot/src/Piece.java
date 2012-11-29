@@ -10,24 +10,82 @@ public class Piece {
 	public static Color GRAY2 = new Color(43, 43, 43);
 	public static Color GRAY3 = new Color(153, 153, 153);
 	public static Color BLACK1 = new Color(255, 255, 255);
-	public static Color BLUE1 = new Color(15, 155, 215);
-	public static Color YELLOW1 = new Color(227, 159, 2);
+	public static Color BLUE1 = new Color(50, 213, 255);	//Long
+	public static Color BLUE2 = new Color(72, 131, 255);	//L
+	public static Color YELLOW1 = new Color(255, 218, 60);	//Square
+	public static Color ORANGE1 = new Color(255, 162, 46);	//L
+	public static Color GREEN1 = new Color(142, 238, 53);	//Z
+	public static Color RED1 = new Color(255, 78, 106);		//Z
+	public static Color PURPLE1 = new Color(235, 80, 205);	//T
 	private static boolean blockRot = true;
+	private static int xCheck = 453;//614;
+	private static int yCheck = 374;//354;
 	
 	public Piece(){
 		minX = 0;
 		maxX = 0;
 		blocks = new boolean[5][5];
+//		blocks[2][0] = true;
+//		blocks[3][0] = true;
+//		blocks[3][1] = true;
+//		blocks[4][1] = true;
 	}
 	
-	public void findSelf(Robot r, int top){
+	public void getNextPiece(Robot r){
 		blocks = new boolean[5][5];
+		Color c = r.getPixelColor(xCheck, yCheck);
+		if(c.equals(BLUE1)){
+			blocks[3][1] = true;
+			blocks[3][2] = true;
+			blocks[3][3] = true;
+			blocks[3][4] = true;
+		}
+		else if(c.equals(BLUE2)){
+			blocks[3][1] = true;
+			blocks[2][1] = true;
+			blocks[2][2] = true;
+			blocks[2][3] = true;
+		}
+		else if(c.equals(YELLOW1)){
+			blocks[3][2] = true;
+			blocks[3][3] = true;
+			blocks[2][2] = true;
+			blocks[2][3] = true;
+		}
+		else if(c.equals(ORANGE1)){
+			blocks[3][3] = true;
+			blocks[2][1] = true;
+			blocks[2][2] = true;
+			blocks[2][3] = true;
+		}
+		else if(c.equals(GREEN1)){
+			blocks[2][1] = true;
+			blocks[2][2] = true;
+			blocks[3][2] = true;
+			blocks[3][3] = true;
+		}
+		else if(c.equals(RED1)){
+			blocks[3][1] = true;
+			blocks[3][2] = true;
+			blocks[2][2] = true;
+			blocks[2][3] = true;
+		}
+		else if(c.equals(PURPLE1)){
+			blocks[3][2] = true;
+			blocks[2][1] = true;
+			blocks[2][2] = true;
+			blocks[2][3] = true;
+		}
+	}
+	
+	public void findSelf(Robot r){
+		blocks = new boolean[5][5];
+		//Find which blocks are being used
 		for(int i = 16; i < 20; i++){
 			for(int j = 3; j <= 6; j++){
 				int xCheck = TetrisRobot.MINX+j*TetrisRobot.OFFSET;
 				int yCheck = TetrisRobot.MINY+(20-i)*TetrisRobot.OFFSET;
 				Color c = r.getPixelColor(xCheck, yCheck);
-				//System.out.println("check " + i);
 				if(!c.equals(GRAY1) && !c.equals(GRAY2)){
 					blocks[i-16][j-3] = true;
 					if(c.equals(BLUE1) || c.equals(YELLOW1))
@@ -37,6 +95,7 @@ public class Piece {
 				}
 			}
 		}
+		//Move down all blocks to the appropriate height
 		boolean[] rows = new boolean[5];
 		for(int row = 0; row < 5; row++){
 			for(int j = 0; j < 5; j++){
@@ -70,7 +129,7 @@ public class Piece {
 	}
 	
 	public int[] detMoveValue(boolean[][] field, int rot, int trans, boolean emergent){
-		boolean[][] newField = iterate(field);
+		boolean[][] newField = iterate(field, trans);
 		int[] ret = new int[6];
 		ret[0] = rot;
 		ret[1] = trans;
@@ -145,14 +204,14 @@ public class Piece {
 	
 	private void rotate(){
 		boolean[][] ret = new boolean[6][6];
-		if(blockRot){
+		if(blockRot){	//If the piece rotates around a particular block
 			for(int i = 0; i < 5; i++){
 				for(int j = 0; j < 5; j++){
 					ret[j][5-i] = blocks[i][j];
 				}
 			}
 		}
-		else{
+		else{	//If the piece rotates around a point between four blocks
 			for(int i = 0; i < 5; i++){
 				for(int j = 0; j < 5; j++){
 					if(6-j < 5)
@@ -163,26 +222,30 @@ public class Piece {
 		blocks = ret;
 	}
 	
-	public boolean[][] iterate(boolean[][] field){
+	public boolean[][] iterate(boolean[][] field, int trans){
+		//Copy field to a new array to return
 		boolean[][] ret = new boolean[field.length][field[0].length];
 		for(int i = 0; i < field.length; i++){
 			for(int j = 0; j < field[0].length; j++){
 				ret[i][j] = field[i][j];
 			}
 		}
+		//Determine the vertical drop distance in y
 		int y = 0;
 		boolean done = false;
-		for(y = 0; y < 20; y++){
-			int botY = 15-y;
-			for(int i = 0; i < 5; i++){
-				for(int j = 0; j < 10; j++){
-					if(botY+i >= 0 && j >= 2 && j <= 6 && ret[botY+i][j] && blocks[i][j]){
-						y--;
+		for(y = 0; y < 20; y++){	//Iterate through drop distances
+			int botY = 15-y;	//Bottom row of block array is at this height in the field
+			for(int i = 0; i < 5; i++){		//Iterate vertically through block array
+				for(int j = 0; j < 5; j++){	//Iterate horizontally across the block array
+					if(botY + i >= 0 && j + 2 + trans >= 0  && j + 6 + trans < 10 && ret[botY+i][j+2+trans] && blocks[i][j]){
+					//block checked within field bounds, a block intersects an existing one in the field
+						y--;	//go up one level to prevent intersection
 						done = true;
 						break;
 					}
-					if(botY + i < 0 && j >= 2 && j <= 6 && ret[botY+i][j] && blocks[i][j]){
-						y--;
+					if(botY + i < 0 && j + 2 + trans >= 0  && j + 6 + trans < 10 &&  blocks[i][j]){
+					//block checked is below the field's bottom bound and exists
+						y--;	//go up one level to prevent going past the bottom
 						done = true;
 						break;
 					}
@@ -193,11 +256,12 @@ public class Piece {
 			if(done)
 				break;
 		}
+		//Fill the new array with piece after the resulting drop
 		int botY = 15-y;
 		for(int i = 0; i < 5; i++){
-			for(int j = 0; j < 10; j++){
-				if(j >= 2 && j <= 7 && blocks[i][j])
-					ret[botY+i][j] = true;
+			for(int j = 0; j < 5; j++){
+				if(j + 2 + trans >= 0 && j + 2 + trans < 10 && blocks[i][j])
+					ret[botY+i][j+2+trans] = true;
 			}
 		}
 		return ret;
@@ -205,13 +269,13 @@ public class Piece {
 	
 	public int clearLines(boolean[][] field){
 		int ret = 0;
-		for(int i = 0; i < 20; i++){
+		for(int i = 0; i < 20; i++){	//Iterate through possible full rows
 			boolean clear = true;
-			for(int j = 0; j < 10; j++){
+			for(int j = 0; j < 10; j++){	//Check each block in the row
 				clear = clear && field[i][j];
 			}
 			if(clear){
-				for(int r = i; r < 19; r++){
+				for(int r = i; r < 19; r++){	//Move everything down from row i upward
 					for(int j = 0; j < 10; j++){
 						field[r][j] = field[r+1][j];
 					}
