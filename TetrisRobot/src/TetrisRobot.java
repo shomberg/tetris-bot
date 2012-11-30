@@ -15,10 +15,11 @@ public class TetrisRobot //implements KeyListener
 	public static void main(String[] args) throws AWTException{
 		startTime = System.currentTimeMillis();
 		field = new  boolean[20][10];
-//		field[0][3] = true;
-//		field[1][3] = true;
-//		Piece q = new Piece();
-//		field = q.iterate(field, 0);
+		field[0][2] = true;
+		field[1][3] = true;
+		Piece a = new Piece();
+		int[] b = a.detOptimal(field, false);
+		field = a.iterate(field, 0);
 		int top = 0;
 		boolean emergent = false;
 		Robot r = new Robot();
@@ -26,7 +27,8 @@ public class TetrisRobot //implements KeyListener
 		delay(5000);
 		Piece p = new Piece();
 		Piece q = new Piece();
-		q.findSelf(r);
+		q.getNextPiece(r);
+		keyType(r, KeyEvent.VK_SPACE);
 		while(System.currentTimeMillis()-startTime < 10000){// && cont
 			System.out.println("start cycle");
 			//p.findSelf(r);
@@ -74,6 +76,7 @@ public class TetrisRobot //implements KeyListener
 	
 	private static void keyType(Robot r, int keycode){
 		r.keyPress(keycode);
+		delay(100);
 		r.keyRelease(keycode);
 	}
 	
