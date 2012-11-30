@@ -18,17 +18,17 @@ public class Piece {
 	public static Color RED1 = new Color(255, 78, 106);		//Z
 	public static Color PURPLE1 = new Color(235, 80, 205);	//T
 	private static boolean blockRot = true;
-	private static int xCheck = 453;//614;
-	private static int yCheck = 374;//354;
+	private static int xCheck = TetrisRobot.MINX + 234;
+	private static int yCheck = TetrisRobot.MINY + 49;
 	
 	public Piece(){
 		minX = 0;
 		maxX = 0;
 		blocks = new boolean[5][5];
-//		blocks[2][0] = true;
-//		blocks[3][0] = true;
-//		blocks[3][1] = true;
-//		blocks[4][1] = true;
+		blocks[2][1] = true;
+		blocks[2][2] = true;
+		blocks[3][2] = true;
+		blocks[3][3] = true;
 	}
 	
 	public void getNextPiece(Robot r){
@@ -39,42 +39,49 @@ public class Piece {
 			blocks[3][2] = true;
 			blocks[3][3] = true;
 			blocks[3][4] = true;
+			blockRot = false;
 		}
 		else if(c.equals(BLUE2)){
 			blocks[3][1] = true;
 			blocks[2][1] = true;
 			blocks[2][2] = true;
 			blocks[2][3] = true;
+			blockRot = true;
 		}
 		else if(c.equals(YELLOW1)){
 			blocks[3][2] = true;
 			blocks[3][3] = true;
 			blocks[2][2] = true;
 			blocks[2][3] = true;
+			blockRot = false;
 		}
 		else if(c.equals(ORANGE1)){
 			blocks[3][3] = true;
 			blocks[2][1] = true;
 			blocks[2][2] = true;
 			blocks[2][3] = true;
+			blockRot = true;
 		}
 		else if(c.equals(GREEN1)){
 			blocks[2][1] = true;
 			blocks[2][2] = true;
 			blocks[3][2] = true;
 			blocks[3][3] = true;
+			blockRot = true;
 		}
 		else if(c.equals(RED1)){
 			blocks[3][1] = true;
 			blocks[3][2] = true;
 			blocks[2][2] = true;
 			blocks[2][3] = true;
+			blockRot = true;
 		}
 		else if(c.equals(PURPLE1)){
 			blocks[3][2] = true;
 			blocks[2][1] = true;
 			blocks[2][2] = true;
 			blocks[2][3] = true;
+			blockRot = true;
 		}
 	}
 	
@@ -115,13 +122,16 @@ public class Piece {
 	
 	public int[] detOptimal(boolean[][] field, boolean emergent){
 		int[] ret = new int[6];
+		boolean first = true;
 		for(int rot = 0; rot < 4; rot++){
 			for(int trans = -5; trans <= 5; trans++){
 				if(!inBounds(trans))
 					continue;
 				int[] test = detMoveValue(field, rot, trans, emergent);
-				if(smaller(ret, test, emergent))
+				if(smaller(ret, test, emergent) || first){
 					ret = test;
+					first = false;
+				}
 			}
 			rotate();
 		}
@@ -195,7 +205,7 @@ public class Piece {
 	public boolean inBounds(int trans){
 		for(int i = 0; i < 5; i++){
 			for(int j = 0; j < 5; j++){
-				if(blocks[i][j] && (i+trans+2 < 0 || i+trans+2 >= 10))
+				if(blocks[i][j] && (j+trans+2 < 0 || j+trans+2 >= 10))
 					return false;
 			}
 		}
@@ -237,7 +247,7 @@ public class Piece {
 			int botY = 15-y;	//Bottom row of block array is at this height in the field
 			for(int i = 0; i < 5; i++){		//Iterate vertically through block array
 				for(int j = 0; j < 5; j++){	//Iterate horizontally across the block array
-					if(botY + i >= 0 && j + 2 + trans >= 0  && j + 6 + trans < 10 && ret[botY+i][j+2+trans] && blocks[i][j]){
+					if(botY + i >= 0 && j + 2 + trans >= 0  && j + 2 + trans < 10 && ret[botY+i][j+2+trans] && blocks[i][j]){
 					//block checked within field bounds, a block intersects an existing one in the field
 						y--;	//go up one level to prevent intersection
 						done = true;
@@ -260,7 +270,7 @@ public class Piece {
 		int botY = 15-y;
 		for(int i = 0; i < 5; i++){
 			for(int j = 0; j < 5; j++){
-				if(j + 2 + trans >= 0 && j + 2 + trans < 10 && blocks[i][j])
+				if(botY + i >= 0 && j + 2 + trans >= 0 && j + 2 + trans < 10 && blocks[i][j])
 					ret[botY+i][j+2+trans] = true;
 			}
 		}
@@ -307,21 +317,21 @@ public class Piece {
 				return true;
 		}
 		else{
-			if(move1[2] < move2[2])
-				return false;
-			if(move1[2] > move2[2])
-				return true;
 			int[] ranks = {1, 2, 0, 3, 4};
 			int check1 = -1, check2 = -1;
 			for(int i = 0; i < 5; i++){
-				if(ranks[i] == move1[3])
+				if(ranks[i] == move1[2])
 					check1 = i;
-				if(ranks[i] == move2[3])
+				if(ranks[i] == move2[2])
 					check2 = i;
 			}
 			if(check1 > check2)
 				return false;
 			if(check1 < check2)
+				return true;
+			if(move1[3] < move2[3])
+				return false;
+			if(move1[3] > move2[3])
 				return true;
 			if(move1[4] > move2[4])
 				return false;
